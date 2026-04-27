@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Reparto — Supervisor</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080a0f;--bg2:#0c0f18;--s:#10141f;--s2:#161b29;--s3:#1c2235;--border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.10);--green:#00ff9d;--green-d:#00cc7e;--blue:#3b9eff;--amber:#ffaa00;--red:#ff4a6e;--purple:#a78bfa;--text:#e2e8f8;--text2:#7a87a8;--text3:#3d4a68;--mono:'JetBrains Mono',monospace;--display:'Outfit',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--display);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,255,157,.04) 0%,transparent 60%);pointer-events:none;z-index:0}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+header{position:sticky;top:0;z-index:200;background:rgba(8,10,15,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--green),#00b36e);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 20px rgba(0,255,157,.25)}
+.logo-name{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.logo-tag{font-family:var(--mono);font-size:9px;color:var(--green);background:rgba(0,255,157,.08);border:1px solid rgba(0,255,157,.15);padding:3px 8px;border-radius:4px;letter-spacing:1.5px;text-transform:uppercase}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.hdr-date{font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--s);border:1px solid var(--border2);padding:6px 12px;border-radius:6px}
+.btn{background:var(--s);border:1px solid var(--border2);color:var(--text2);padding:6px 14px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.btn:hover{border-color:var(--green);color:var(--green);background:rgba(0,255,157,.05)}
+.filtros{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 32px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.fg{display:flex;align-items:center;gap:8px}
+.fl{font-family:var(--mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px}
+select,input[type=date]{background:var(--s);border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer;outline:none;transition:border-color .2s}
+select:focus,input[type=date]:focus{border-color:var(--green)}
+.tabs{display:flex;border-bottom:1px solid var(--border);padding:0 32px;background:var(--bg2)}
+.tab{padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;color:var(--text3);border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;font-family:var(--display);text-transform:uppercase;letter-spacing:.3px}
+.tab.act{color:var(--green);border-bottom-color:var(--green)}
+.tab:hover:not(.act){color:var(--text)}
+main{padding:24px 32px;max-width:1440px;margin:0 auto;position:relative;z-index:1}
+.panel{display:none}.panel.act{display:block}
+.mets{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+.met{background:var(--s);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
+.met:hover{transform:translateY(-1px);border-color:var(--border2)}
+.met-glow{position:absolute;top:0;left:0;right:0;height:1px;opacity:.6}
+.met-lbl{font-family:var(--mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
+.met-val{font-size:22px;font-weight:800;line-height:1;margin-bottom:3px;font-family:var(--mono);letter-spacing:-.5px}
+.met-sub{font-family:var(--mono);font-size:12px;color:var(--text3)}
+.cg .met-val{color:var(--green)}.cg .met-glow{background:var(--green)}
+.cb .met-val{color:var(--blue)}.cb .met-glow{background:var(--blue)}
+.ca .met-val{color:var(--amber)}.ca .met-glow{background:var(--amber)}
+.cr .met-val{color:var(--red)}.cr .met-glow{background:var(--red)}
+.cp .met-val{color:var(--purple)}.cp .met-glow{background:var(--purple)}
+.card{background:var(--s);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px}
+.ch{padding:13px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--s2)}
+.ct{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.cs{font-family:var(--mono);font-size:12px;color:var(--text3)}
+.av{padding:20px}
+.av-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+.av-p{font-size:36px;font-weight:700;color:var(--green);letter-spacing:-.5px;line-height:1;font-family:var(--mono)}
+.av-pct{font-size:36px;font-weight:700;color:var(--green);letter-spacing:-.5px;line-height:1;font-family:var(--mono);text-align:right}
+.av-pl{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px}
+.prog{height:6px;background:var(--s3);border-radius:3px;overflow:visible;position:relative;margin-bottom:8px}
+.prog-f{height:100%;border-radius:3px;transition:width 1s cubic-bezier(.4,0,.2,1);position:relative}
+.prog-f::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(0,255,157,.6)}
+.prog-ls{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--text3)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{padding:10px 20px;text-align:left;font-family:var(--mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;font-weight:400;border-bottom:1px solid var(--border);background:var(--s2);white-space:nowrap}
+th.r{text-align:right}
+td{padding:12px 20px;border-bottom:1px solid var(--border)}
+td.r{text-align:right;font-family:var(--mono);font-size:12px}
+tr:last-child td{border-bottom:none}
+.trc{cursor:pointer;transition:background .1s}.trc:hover{background:var(--s2)}.trc.sel{background:rgba(0,255,157,.04);border-left:2px solid var(--green)}
+.badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px;letter-spacing:.3px}
+.bok{background:rgba(0,255,157,.08);color:var(--green);border:1px solid rgba(0,255,157,.15)}
+.bwarn{background:rgba(255,170,0,.08);color:var(--amber);border:1px solid rgba(255,170,0,.15)}
+.berr{background:rgba(255,74,110,.08);color:var(--red);border:1px solid rgba(255,74,110,.15)}
+.bblue{background:rgba(59,158,255,.08);color:var(--blue);border:1px solid rgba(59,158,255,.15)}
+.bdot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.gtag{display:inline-flex;font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:4px;margin:1px;font-weight:500;text-transform:uppercase;letter-spacing:.3px}
+.gGC001{background:rgba(0,255,157,.1);color:var(--green)}.gGA002{background:rgba(59,158,255,.1);color:var(--blue)}.gGN003{background:rgba(255,170,0,.1);color:var(--amber)}.gGAL004{background:rgba(255,74,110,.1);color:var(--red)}
+.gP001{background:rgba(0,255,157,.1);color:var(--green)}.gP002{background:rgba(59,158,255,.1);color:var(--blue)}.gP003{background:rgba(255,170,0,.1);color:var(--amber)}
+.det{background:var(--bg2);border-top:1px solid var(--border);padding:18px 20px;animation:sd .2s ease}
+@keyframes sd{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.det-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.det-t::before{content:'';width:3px;height:12px;background:var(--green);border-radius:2px}
+.det-g{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.det-i label{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;display:block;margin-bottom:5px}
+.det-i span{font-size:16px;font-weight:700}
+.pb{padding:4px 0}
+.pr{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border)}
+.pr:last-child{border-bottom:none}
+.pn{font-family:var(--mono);font-size:10px;color:var(--text2);width:160px;flex-shrink:0;letter-spacing:.3px}
+.pw{flex:1}
+.ph{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--text3);margin-bottom:6px}
+.pt{height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
+.pf{height:100%;border-radius:2px;transition:width .6s ease}
+.pfoot{display:flex;gap:14px;margin-top:6px;font-family:var(--mono);font-size:12px;color:var(--text3)}
+.pfalt{color:var(--red)}.pdev{color:var(--amber)}
+.chips{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.chip{padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border2);color:var(--text3);background:none;transition:all .15s;font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.chip.act{background:var(--green);color:#000;border-color:var(--green)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.pmets{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.pmet{background:var(--s);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden}
+.pmet-acc{position:absolute;top:0;left:0;right:0;height:2px}
+.pmet-lbl{font-family:var(--mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.pmet-val{font-size:22px;font-weight:700;margin-bottom:2px;font-family:var(--mono)}
+.pmet-sub{font-family:var(--mono);font-size:12px;color:var(--text3)}
+.load{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;gap:14px;color:var(--text3);font-family:var(--mono);font-size:13px}
+.spin{width:24px;height:24px;border:1.5px solid var(--s3);border-top-color:var(--green);border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px;color:var(--text3);font-family:var(--mono);font-size:11px;letter-spacing:.5px}
+.err{background:rgba(255,74,110,.06);border:1px solid rgba(255,74,110,.2);color:var(--red);padding:12px 16px;border-radius:8px;font-size:11px;margin-bottom:16px;display:none;font-family:var(--mono)}
+.tn{font-size:15px;font-weight:600}.tm{font-family:var(--mono);font-size:12px;color:var(--text3);margin-top:2px}
+@media(max-width:900px){.g2{grid-template-columns:1fr}.mets{grid-template-columns:repeat(2,1fr)}.pmets{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-mark">📦</div>
+    <div><div class="logo-name">Reparto Galletas</div><div class="logo-tag" style="margin-top:2px">Supervisor</div></div>
+  </div>
+  <div class="hdr-r">
+    <div class="hdr-date" id="hdr-date">—</div>
+    <button class="btn" onclick="exportarExcel()">⬇ EXCEL</button>
+    <button class="btn" onclick="cargarDatos()">↻ ACTUALIZAR</button>
+  </div>
+</header>
+
+<div class="filtros">
+  <div class="fg"><span class="fl">Fecha</span><input type="date" id="f-fecha" onchange="cargarDatos()"></div>
+  <div class="fg"><span class="fl">Ruta</span><select id="f-ruta" onchange="renderizar()"><option value="">Todas las rutas</option></select></div>
+</div>
+
+<div class="tabs">
+  <button class="tab act" onclick="stab('resumen',this)">Resumen</button>
+  <button class="tab" onclick="stab('tiendas',this)">Por tienda</button>
+  <button class="tab" onclick="stab('productos',this)">Por producto</button>
+  <button class="tab" onclick="stab('carga',this)">Carga del día</button>
+</div>
+
+<main>
+  <div class="err" id="err"></div>
+
+  <div id="panel-resumen" class="panel act">
+    <div class="mets">
+      <div class="met cg"><div class="met-glow"></div><div class="met-lbl">Vendido $</div><div class="met-val" id="m-v">—</div><div class="met-sub" id="m-vs">calculando</div></div>
+      <div class="met cb"><div class="met-glow"></div><div class="met-lbl">Cobrado $</div><div class="met-val" id="m-c">—</div><div class="met-sub">pagos recibidos</div></div>
+      <div class="met ca"><div class="met-glow"></div><div class="met-lbl">Faltantes $</div><div class="met-val" id="m-f">—</div><div class="met-sub" id="m-fs">en tiendas</div></div>
+      <div class="met ca"><div class="met-glow"></div><div class="met-lbl">Devoluciones</div><div class="met-val" id="m-d">—</div><div class="met-sub" id="m-ds">paq regresados</div></div>
+      <div class="met cr"><div class="met-glow"></div><div class="met-lbl">Diferencia</div><div class="met-val" id="m-dif">—</div><div class="met-sub">sin cuadrar</div></div>
+      <div class="met cp"><div class="met-glow"></div><div class="met-val" id="m-a">—</div><div class="met-lbl">Avance</div><div class="met-sub" id="m-as">tiendas visitadas</div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Avance del día en pesos</div><div class="cs" id="av-sub">—</div></div>
+      <div class="av">
+        <div class="av-top">
+          <div><div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px">Vendido estimado</div><div class="av-p" id="av-p">$—</div></div>
+          <div><div class="av-pct" id="av-pct">—%</div><div class="av-pl">de la meta</div></div>
+        </div>
+        <div class="prog"><div class="prog-f" id="av-bar" style="width:0%;background:linear-gradient(90deg,var(--green-d),var(--green))"></div></div>
+        <div class="prog-ls"><span>$0</span><span id="av-falt" style="color:var(--red)"></span><span id="av-meta">meta: $—</span></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="ch"><div class="ct">Faltantes y devoluciones</div><div class="cs">por producto</div></div>
+        <div id="falt-load" class="load"><div class="spin"></div>Cargando...</div>
+        <div id="falt-body" class="pb" style="display:none"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Rutas del día</div><div class="cs" id="rutas-ct"></div></div>
+        <div id="rutas-load" class="load"><div class="spin"></div>Cargando...</div>
+        <table id="t-rutas" style="display:none">
+          <thead><tr><th>Ruta</th><th>Día</th><th class="r">Tiendas</th><th class="r">Cobrado $</th><th>Estado</th></tr></thead>
+          <tbody id="b-rutas"></tbody>
+        </table>
+        <div class="empty" id="e-rutas" style="display:none">Sin datos</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-tiendas" class="panel">
+    <div class="chips">
+      <button class="chip act" onclick="filtT('todas',this)">Todas</button>
+      <button class="chip" onclick="filtT('bien',this)">Sin diferencia</button>
+      <button class="chip" onclick="filtT('alerta',this)">Con alerta</button>
+      <button class="chip" onclick="filtT('mal',this)">Con problema</button>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Detalle por tienda</div><div class="cs">clic para desglose · <span id="ct-t"></span></div></div>
+      <div id="t-load" class="load"><div class="spin"></div>Cargando...</div>
+      <table id="t-tiendas" style="display:none">
+        <thead><tr><th>Tienda / Colonia</th><th>Galletas</th><th class="r">Hora</th><th class="r">Entregado</th><th class="r">Restante</th><th class="r">Devuelto</th><th class="r">Vendido $</th><th class="r">Cobrado $</th><th class="r">Pagado</th><th>Estado</th></tr></thead>
+        <tbody id="b-tiendas"></tbody>
+      </table>
+      <div id="det-t" style="display:none"></div>
+      <div class="empty" id="e-tiendas" style="display:none">Sin datos</div>
+    </div>
+  </div>
+
+  <div id="panel-productos" class="panel">
+    <div class="pmets" id="pmets"></div>
+    <div class="card">
+      <div class="ch"><div class="ct">Avance por producto</div><div class="cs">vendido vs entregado · $17.50 / paq</div></div>
+      <div id="p-load" class="load"><div class="spin"></div>Cargando...</div>
+      <div id="p-body" class="pb" style="display:none"></div>
+      <div class="empty" id="e-prod" style="display:none">Sin datos</div>
+    </div>
+  </div>
+
+  <div id="panel-carga" class="panel">
+    <div class="card">
+      <div class="ch"><div class="ct">Carga de cuarto frío</div><div class="cs">lo que salió a ruta vs lo entregado · <span id="ct-carga"></span></div></div>
+      <div id="carga-load" class="load"><div class="spin"></div>Cargando...</div>
+      <table id="t-carga" style="display:none">
+        <thead><tr><th>Producto</th><th class="r">Carga inicial</th><th class="r">Merma</th><th class="r">Disponible</th><th class="r">Entregado</th><th class="r">Regresó</th><th class="r">Diferencia</th><th>Estado</th></tr></thead>
+        <tbody id="b-carga"></tbody>
+      </table>
+      <div class="empty" id="e-carga" style="display:none">Sin datos de carga para esta fecha</div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const SID='12GCYO3OVLPRpTiJzYwKujs6WsIBhXJB6AR1op8q2HiQ';
+const AKEY='AIzaSyCWr8YJ7iOE4Wx1-kSkjcZixwCQBLetyxw';
+const PX=17.50;
+const PNOM={GC001:'Galletas Chocolate',GA002:'Galletas Ate',GN003:'Galletas Nuez',GAL004:'Galletas Alfajor',P001:'Galletas Chocolate',P002:'Galletas Ate',P003:'Galletas Nuez'};
+const PCOL={GC001:'var(--green)',GA002:'var(--blue)',GN003:'var(--amber)',GAL004:'var(--red)',P001:'var(--green)',P002:'var(--blue)',P003:'var(--amber)'};
+const PSHORT={GC001:'Chocolate',GA002:'Ate',GN003:'Nuez',GAL004:'Alfajor',P001:'Chocolate',P002:'Ate',P003:'Nuez'};
+const DIAS=['—','Lunes','Martes','Miércoles','Jueves','Viernes'];
+let dV=[],dD=[],dR=[],dT={},dC=[];
+const fp=n=>'$'+Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const fd=s=>{if(!s)return'—';const m=String(s).match(/(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}/${m[2]}/${m[1]}`:s};
+const hoy=()=>new Date().toISOString().split('T')[0];
+const g=id=>document.getElementById(id);
+
+async function fetchS(r){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/${encodeURIComponent(r)}?key=${AKEY}`;
+  const res=await fetch(url);if(!res.ok)throw new Error(`Error ${res.status}`);
+  return(await res.json()).values||[];
+}
+function parse(rows,key){
+  const hi=rows.findIndex(r=>r[0]===key);if(hi<0)return[];
+  const h=rows[hi];
+  return rows.slice(hi+1).filter(r=>r.some(c=>c&&String(c).trim())).map(r=>{const o={};h.forEach((k,i)=>{o[k]=r[i]||''});return o});
+}
+
+async function cargarDatos(){
+  g('err').style.display='none';
+  ['falt-load','rutas-load','t-load','p-load'].forEach(id=>{const l=g(id);if(l)l.style.display='flex'});
+  ['t-rutas','t-tiendas','falt-body','p-body'].forEach(id=>{const el=g(id);if(el)el.style.display='none'});
+  try{
+    const[rV,rD,rR,rT,rC]=await Promise.all([
+      fetchS('08_Visitas_Tienda!A1:J500'),
+      fetchS('09_Detalle_Visita!A1:O2000'),
+      fetchS('05_Rutas!A1:H100'),
+      fetchS('04_Tiendas!A1:G200'),
+      fetchS('07_Carga_Ruta!A1:M200'),
+    ]);
+    dV=parse(rV,'VISITA_ID');dD=parse(rD,'DETALLE_ID');dR=parse(rR,'RUTA_ID');
+    dT={};dC=parse(rC,'CARGA_ID');
+    const hiT=rT.findIndex(r=>r[0]==='TIENDA_ID');
+    if(hiT>=0)rT.slice(hiT+1).forEach(r=>{if(r[0])dT[r[0]]={nombre:r[1]||r[0],municipio:r[2]||'',colonia:r[6]||''}});
+    const sel=g('f-ruta');const prev=sel.value;
+    sel.innerHTML='<option value="">Todas las rutas</option>';
+    dR.forEach(r=>{if(!r.RUTA_ID)return;const o=document.createElement('option');o.value=r.RUTA_ID;o.textContent=r.RUTA||r.RUTA_ID;sel.appendChild(o)});
+    if(prev)sel.value=prev;
+    renderizar();
+  }catch(e){
+    const eb=g('err');eb.textContent='⚠ '+e.message+' — Verifica permisos del Sheets.';eb.style.display='block';
+    ['falt-load','rutas-load','t-load','p-load'].forEach(id=>{const l=g(id);if(l)l.style.display='none'});
+  }
+}
+
+function renderizar(){
+  const rf=g('f-ruta').value,fecha=g('f-fecha').value;
+  g('hdr-date').textContent=fecha?fd(fecha):'Todos los días';
+  let vis=dV;
+  if(rf)vis=vis.filter(v=>v.RUTA_ID===rf);
+  if(fecha)vis=vis.filter(v=>String(v.FECHA||'').split('T')[0]===fecha);
+  const vIds=new Set(vis.map(v=>v.VISITA_ID));
+  const vMap={};vis.forEach(v=>{vMap[v.VISITA_ID]={tienda:v.TIENDA_ID,ruta:v.RUTA_ID}});
+  let det=dD.filter(d=>vIds.has(d.VISITA_ID)||(rf&&d.RUTA_ID===rf));
+  if(!rf&&!fecha)det=dD;
+  det=det.map(d=>{
+    if(!d.TIENDA_ID&&vMap[d.VISITA_ID])d.TIENDA_ID=vMap[d.VISITA_ID].tienda;
+    if(!d.RUTA_ID&&vMap[d.VISITA_ID])d.RUTA_ID=vMap[d.VISITA_ID].ruta;
+    return d;
+  });
+  let tEnt=0,tVend=0,tFin=0,tDev=0,tCob=0;
+  det.forEach(d=>{
+    const ini=+d.INV_INICIAL||0,ent=+d.ENTREGADO||0,dev=+d.DEVOLUCION||0,fin=+d.INV_FINAL||0;
+    tEnt+=ent;tVend+=(ini+ent-dev-fin);tFin+=fin;tDev+=dev;tCob+=+d.MONTO_COBRADO||0;
+  });
+  const pV=tVend*PX,pM=tEnt*PX,pF=tFin*PX,pct=pM>0?Math.round((pV/pM)*100):0,dif=tEnt-tVend-tFin-tDev;
+  g('m-v').textContent=fp(pV);g('m-vs').textContent=`${tVend} paq × $${PX}`;
+  g('m-c').textContent=fp(tCob);
+  g('m-f').textContent=fp(pF);g('m-fs').textContent=`${tFin} paq`;
+  g('m-d').textContent=tDev;g('m-ds').textContent=fp(tDev*PX)+' valor';
+  g('m-dif').textContent=Math.abs(dif);
+  g('m-a').textContent=pct+'%';g('m-as').textContent=`${vIds.size} tiendas`;
+  g('av-p').textContent=fp(pV);g('av-pct').textContent=pct+'%';
+  setTimeout(()=>{g('av-bar').style.width=pct+'%'},100);
+  g('av-meta').textContent='meta: '+fp(pM);
+  g('av-falt').textContent=fp(pF)+' faltantes';
+  g('av-sub').textContent=`${tVend} vendidos de ${tEnt} entregados`;
+  renderRutas(det);renderTiendas(det);renderProductos(det);renderCarga();
+}
+
+function renderRutas(det){
+  g('rutas-load').style.display='none';
+  const tbody=g('b-rutas');tbody.innerHTML='';
+  if(!dR.length){g('e-rutas').style.display='block';return}
+  const cob={};
+  det.forEach(d=>{const r=d.RUTA_ID;if(!r)return;if(!cob[r])cob[r]=0;cob[r]+=+d.MONTO_COBRADO||0});
+  dR.forEach(r=>{
+    if(!r.RUTA_ID)return;
+    const est=r.ESTADO||'Planeada';
+    const num=parseInt(r.RUTA_ID.replace(/\D/g,''))||0;
+    const dia=DIAS[num]||'';
+    const pill=est==='Cerrada'||est==='Completa'?`<span class="badge bok"><span class="bdot"></span>Completa</span>`:est==='Abierta'?`<span class="badge bblue"><span class="bdot"></span>En curso</span>`:`<span class="badge bwarn"><span class="bdot"></span>${est}</span>`;
+    const tr=document.createElement('tr');tr.className='trc';
+    tr.innerHTML=`<td><div class="tn">${r.RUTA||r.RUTA_ID}</div></td><td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${dia}</td><td class="r">${r.TOTAL_TIENDAS||'—'}</td><td class="r" style="color:var(--green)">${fp(cob[r.RUTA_ID]||0)}</td><td>${pill}</td>`;
+    tbody.appendChild(tr);
+  });
+  g('t-rutas').style.display='table';
+  g('rutas-ct').textContent=dR.filter(r=>r.RUTA_ID).length+' rutas';
+}
+
+function renderTiendas(det){
+  g('t-load').style.display='none';
+  const tbody=g('b-tiendas');tbody.innerHTML='';
+  g('det-t').style.display='none';
+  const por={};
+  const horaMap={};
+  dV.forEach(v=>{if(v.TIENDA_ID&&v.HORA_LLEGADA)horaMap[v.TIENDA_ID]=String(v.HORA_LLEGADA).substring(0,5)});
+  det.forEach(d=>{
+    const tid=d.TIENDA_ID||'?';
+    if(!por[tid])por[tid]={ini:0,ent:0,dev:0,fin:0,cob:0,pag:0,prods:[],hora:''};
+    por[tid].ini+=+d.INV_INICIAL||0;por[tid].ent+=+d.ENTREGADO||0;
+    por[tid].dev+=+d.DEVOLUCION||0;por[tid].fin+=+d.INV_FINAL||0;
+    por[tid].cob+=+d.MONTO_COBRADO||0;
+    if(!por[tid].hora&&horaMap[tid])por[tid].hora=horaMap[tid];
+    if(d.PAGADO==='Sí'||d.PAGADO==='Si'||d.PAGADO==='1')por[tid].pag=1;
+    if(d.PRODUCTO_ID)por[tid].prods.push(d.PRODUCTO_ID);
+  });
+  const filas=Object.entries(por).sort((a,b)=>b[1].ent-a[1].ent);
+  g('ct-t').textContent=filas.length+' tiendas';
+  if(!filas.length){g('e-tiendas').style.display='block';return}
+  filas.forEach(([tid,t])=>{
+    const vend=t.ini+t.ent-t.dev-t.fin,dif=t.ent-vend-t.fin-t.dev;
+    const info=dT[tid]||{nombre:tid,municipio:'',colonia:''};
+    let est,pill;
+    if(Math.abs(dif)===0){est='bien';pill=`<span class="badge bok"><span class="bdot"></span>OK</span>`}
+    else if(Math.abs(dif)<=3){est='alerta';pill=`<span class="badge bwarn"><span class="bdot"></span>Dif ${dif>0?'+':''}${dif}</span>`}
+    else{est='mal';pill=`<span class="badge berr"><span class="bdot"></span>Dif ${dif>0?'+':''}${dif}</span>`}
+    const cnt={};t.prods.forEach(p=>{cnt[p]=(cnt[p]||0)+1});
+    const tags=Object.entries(cnt).map(([k])=>`<span class="gtag g${k}">${PSHORT[k]||k}</span>`).join('');
+    const pagB=t.pag?`<span class="badge bok">Sí</span>`:`<span class="badge bwarn">No</span>`;
+    const tr=document.createElement('tr');tr.className='trc';tr.dataset.est=est;
+    tr.onclick=()=>abrirDet(tr,tid,info.nombre,t,vend,dif,cnt);
+    const horaStr=t.hora?`<span style="font-family:var(--mono);font-size:11px;color:var(--green)">${t.hora}</span>`:`<span style="color:var(--text3)">—</span>`;
+    tr.innerHTML=`<td><div class="tn">${info.nombre}</div><div class="tm">${info.colonia||info.municipio}</div></td><td>${tags||'—'}</td><td class="r">${horaStr}</td><td class="r">${t.ent}</td><td class="r" style="color:var(--amber)">${t.fin}</td><td class="r" style="color:var(--red)">${t.dev}</td><td class="r" style="color:var(--green)">${fp(vend*PX)}</td><td class="r" style="color:var(--blue)">${fp(t.cob)}</td><td class="r">${pagB}</td><td>${pill}</td>`;
+    tbody.appendChild(tr);
+  });
+  g('t-tiendas').style.display='table';
+}
+
+function abrirDet(row,tid,nombre,t,vend,dif,cnt){
+  document.querySelectorAll('#b-tiendas tr').forEach(r=>r.classList.remove('sel'));
+  const det=g('det-t');
+  if(det.dataset.abierto===tid){det.style.display='none';det.dataset.abierto='';return}
+  row.classList.add('sel');det.dataset.abierto=tid;
+  const tags=Object.entries(cnt).map(([k,v])=>`<span class="gtag g${k}">${PNOM[k]||k} ×${v}</span>`).join(' ');
+  const dc=dif<-3?'var(--red)':dif<0?'var(--amber)':'var(--green)';
+  det.innerHTML=`<div class="det"><div class="det-t">${nombre}</div><div class="det-g">
+    <div class="det-i"><label>Galletas</label><div style="margin-top:6px;line-height:2">${tags}</div></div>
+    <div class="det-i"><label>Entregado</label><span style="color:var(--blue)">${t.ent} paq · ${fp(t.ent*PX)}</span></div>
+    <div class="det-i"><label>Devuelto</label><span style="color:var(--amber)">${t.dev} paq · ${fp(t.dev*PX)}</span></div>
+    <div class="det-i"><label>Vendido est.</label><span style="color:var(--green)">${fp(vend*PX)}</span></div>
+    <div class="det-i"><label>Cobrado</label><span style="color:var(--blue)">${fp(t.cob)}</span></div>
+    <div class="det-i"><label>Diferencia</label><span style="color:${dc}">${dif===0?'0 ✓':dif+' paq'}</span></div>
+  </div></div>`;
+  det.style.display='block';
+}
+
+function filtT(est,btn){
+  if(btn){document.querySelectorAll('.chip').forEach(c=>c.classList.remove('act'));btn.classList.add('act')}
+  document.querySelectorAll('#b-tiendas tr').forEach(tr=>{tr.style.display=(est==='todas'||tr.dataset.est===est)?'':'none'});
+  g('det-t').style.display='none';
+}
+
+function renderProductos(det){
+  g('p-load').style.display='none';g('falt-load').style.display='none';
+  const por={};
+  det.forEach(d=>{
+    const pid=d.PRODUCTO_ID||'?';if(!por[pid])por[pid]={ent:0,vend:0,fin:0,dev:0};
+    const ini=+d.INV_INICIAL||0,ent=+d.ENTREGADO||0,dev=+d.DEVOLUCION||0,fin=+d.INV_FINAL||0;
+    por[pid].ent+=ent;por[pid].vend+=(ini+ent-dev-fin);por[pid].fin+=fin;por[pid].dev+=dev;
+  });
+  const prods=Object.entries(por).sort((a,b)=>b[1].vend-a[1].vend);
+  const pm=g('pmets');pm.innerHTML='';
+  prods.forEach(([pid,p])=>{
+    const col=PCOL[pid]||'var(--green)',nom=PSHORT[pid]||pid;
+    pm.innerHTML+=`<div class="pmet"><div class="pmet-acc" style="background:${col}"></div><div class="pmet-lbl">${nom}</div><div class="pmet-val" style="color:${col}">${fp(p.vend*PX)}</div><div class="pmet-sub">${p.vend} paq vendidos</div></div>`;
+  });
+  if(!prods.length){g('e-prod').style.display='block';return}
+  const pb=g('p-body');pb.innerHTML='';
+  const fb=g('falt-body');fb.innerHTML='';
+  prods.forEach(([pid,p])=>{
+    const col=PCOL[pid]||'var(--green)',nom=PNOM[pid]||pid;
+    const pct=p.ent>0?Math.round((p.vend/p.ent)*100):0;
+    pb.innerHTML+=`<div class="pr"><div class="pn">${nom}</div><div class="pw">
+      <div class="ph"><span>${p.vend} vendidos de ${p.ent} entregados</span><span style="color:${col};font-weight:700">${pct}%</span></div>
+      <div class="pt"><div class="pf" style="width:${pct}%;background:${col}"></div></div>
+      <div class="pfoot"><span>${fp(p.vend*PX)}</span><span>${fp(p.ent*PX)} meta</span><span class="pfalt">${p.fin} falt · ${fp(p.fin*PX)}</span><span class="pdev">${p.dev} dev · ${fp(p.dev*PX)}</span></div>
+    </div></div>`;
+    fb.innerHTML+=`<div class="pr"><div class="pn">${PSHORT[pid]||pid}</div><div class="pw">
+      <div class="pt"><div class="pf" style="width:${pct}%;background:${col}"></div></div>
+      <div class="pfoot"><span>${p.vend} vend.</span><span class="pfalt">${p.fin} falt · ${fp(p.fin*PX)}</span><span class="pdev">${p.dev} dev.</span></div>
+    </div></div>`;
+  });
+  pb.style.display='block';fb.style.display='block';
+}
+
+
+function renderCarga(){
+  const cargaLoad=g('carga-load');
+  if(cargaLoad)cargaLoad.style.display='none';
+  const tbody=g('b-carga');if(!tbody)return;
+  tbody.innerHTML='';
+
+  if(!dC.length){g('e-carga').style.display='block';return}
+
+  // Agrupar detalles por producto para saber cuanto se entrego real
+  const entProd={};
+  dD.forEach(d=>{
+    const pid=d.PRODUCTO_ID;if(!pid)return;
+    if(!entProd[pid])entProd[pid]=0;
+    entProd[pid]+=+d.ENTREGADO||0;
+  });
+
+  // Agrupar carga por producto
+  const cargaProd={};
+  dC.forEach(c=>{
+    const pid=c.PRODUCTO_ID;if(!pid)return;
+    if(!cargaProd[pid])cargaProd[pid]={ini:0,merma:0,disp:0,rutaId:c.RUTA_ID};
+    cargaProd[pid].ini+=+c.CARGA_INICIAL||0;
+    cargaProd[pid].merma+=+c.MERMA||0;
+    cargaProd[pid].disp+=+c.DISPONIBLE||0;
+  });
+
+  const prods=Object.entries(cargaProd);
+  g('ct-carga').textContent=prods.length+' productos';
+
+  if(!prods.length){g('e-carga').style.display='block';return}
+
+  prods.forEach(([pid,c]=[])=>{
+    const nom=PNOM[pid]||pid;
+    const col=PCOL[pid]||'var(--green)';
+    const ent=entProd[pid]||0;
+    const disp=c.disp||c.ini-c.merma;
+    const regreso=disp-ent;
+    const dif=c.ini-c.merma-ent-regreso;
+
+    let pill,est;
+    if(dif===0){pill=`<span class="badge bok"><span class="bdot"></span>Cuadra</span>`;est='bien'}
+    else if(Math.abs(dif)<=3){pill=`<span class="badge bwarn"><span class="bdot"></span>Dif ${dif>0?'+':''}${dif}</span>`;est='alerta'}
+    else{pill=`<span class="badge berr"><span class="bdot"></span>Dif ${dif>0?'+':''}${dif}</span>`;est='mal'}
+
+    const pct=disp>0?Math.round((ent/disp)*100):0;
+    const tr=document.createElement('tr');tr.className='trc';
+    tr.innerHTML=`
+      <td><div style="font-weight:600;font-size:13px">${nom}</div>
+        <div style="margin-top:4px">
+          <div style="height:3px;background:var(--s3);border-radius:2px;width:120px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${col};border-radius:2px"></div>
+          </div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:2px">${pct}% entregado</div>
+        </div>
+      </td>
+      <td class="r">${c.ini}</td>
+      <td class="r" style="color:var(--red)">${c.merma}</td>
+      <td class="r" style="color:var(--green)">${disp}</td>
+      <td class="r" style="color:var(--blue)">${ent}</td>
+      <td class="r" style="color:var(--amber)">${regreso>=0?regreso:0}</td>
+      <td class="r" style="color:${Math.abs(dif)>0?'var(--red)':'var(--green)'}">${dif===0?'0 ✓':(dif>0?'+':'')+dif}</td>
+      <td>${pill}</td>`;
+    tbody.appendChild(tr);
+  });
+  g('t-carga').style.display='table';
+}
+
+function exportarExcel(){
+  const fecha=g('f-fecha').value||'sin-fecha';
+  const wb=XLSX.utils.book_new();
+
+  // HOJA 1: RESUMEN
+  const tEfectivo=dD.reduce((s,d)=>(d.FORMA_PAGO==='Efectivo'?s+(+d.MONTO_COBRADO||0):s),0);
+  const tTransfer=dD.reduce((s,d)=>(d.FORMA_PAGO==='Transferencia'?s+(+d.MONTO_COBRADO||0):s),0);
+  const tPendiente=dD.reduce((s,d)=>((d.PAGADO!=='Sí'&&d.PAGADO!=='Si'&&d.PAGADO!=='1')?s+(+d.MONTO_COBRADO||0):s),0);
+  const rowsR=[
+    ['REPORTE DE REPARTO DE GALLETAS'],['Fecha:',fecha],[''],
+    ['MÉTRICAS GENERALES',''],
+    ['Vendido estimado',g('m-v')?.textContent||''],
+    ['Cobrado',g('m-c')?.textContent||''],
+    ['Faltantes en tiendas',g('m-f')?.textContent||''],
+    ['Devoluciones (paq)',g('m-d')?.textContent||''],
+    ['Diferencia sin cuadrar',g('m-dif')?.textContent||''],
+    ['Avance del día',g('m-a')?.textContent||''],[''],
+    ['FORMA DE PAGO',''],
+    ['Efectivo',+tEfectivo.toFixed(2)],
+    ['Transferencia',+tTransfer.toFixed(2)],
+    ['Pendiente de cobro',+tPendiente.toFixed(2)],
+  ];
+  const wsR=XLSX.utils.aoa_to_sheet(rowsR);
+  wsR['!cols']=[{wch:24},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,wsR,'Resumen');
+
+  // HOJA 2: CONTADORA
+  const rowsCont=[['Tienda','Colonia','Ruta','Producto','Inv Inicial','Entregado','Devolucion','Restante','Vendido $','Monto Cobrado','Forma Pago','Pagado','Diferencia']];
+  let totEfec=0,totTrans=0,totPend=0,totCob=0,totVend=0;
+  dD.forEach(d=>{
+    const tid=d.TIENDA_ID||'?';
+    const info=dT[tid]||{nombre:tid,colonia:'',municipio:''};
+    const ini=+d.INV_INICIAL||0,ent=+d.ENTREGADO||0,dev=+d.DEVOLUCION||0,fin=+d.INV_FINAL||0;
+    const vend=ini+ent-dev-fin;
+    const cob=+d.MONTO_COBRADO||0;
+    const pagado=d.PAGADO==='Sí'||d.PAGADO==='Si'||d.PAGADO==='1'?'Sí':'No';
+    const forma=d.FORMA_PAGO||'';
+    const dif=ent-vend-fin-dev;
+    totCob+=cob;totVend+=vend;
+    if(forma==='Efectivo')totEfec+=cob;
+    if(forma==='Transferencia')totTrans+=cob;
+    if(pagado==='No')totPend+=cob;
+    rowsCont.push([info.nombre,info.colonia||info.municipio,d.RUTA_ID||'',PNOM[d.PRODUCTO_ID]||d.PRODUCTO_ID||'',ini,ent,dev,fin,+(vend*PX).toFixed(2),+cob.toFixed(2),forma,pagado,dif]);
+  });
+  rowsCont.push(['']);
+  rowsCont.push(['TOTALES','','','','','','','','',+totCob.toFixed(2),'','','']);
+  rowsCont.push(['Efectivo','','','','','','','','',+totEfec.toFixed(2),'','','']);
+  rowsCont.push(['Transferencia','','','','','','','','',+totTrans.toFixed(2),'','','']);
+  rowsCont.push(['Pendiente de cobro','','','','','','','','',+totPend.toFixed(2),'','','']);
+  const wsCont=XLSX.utils.aoa_to_sheet(rowsCont);
+  wsCont['!cols']=[{wch:25},{wch:20},{wch:8},{wch:20},{wch:12},{wch:10},{wch:12},{wch:10},{wch:12},{wch:14},{wch:14},{wch:8},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,wsCont,'Contadora');
+
+  // HOJA 3: POR TIENDA
+  const rowsT=[['Tienda','Colonia','Hora','Entregado','Restante','Devuelto','Vendido $','Cobrado $','Pagado','Estado']];
+  const porT={};const horaMap={};
+  dV.forEach(v=>{if(v.TIENDA_ID&&v.HORA_LLEGADA)horaMap[v.TIENDA_ID]=String(v.HORA_LLEGADA).substring(0,5)});
+  dD.forEach(d=>{
+    const tid=d.TIENDA_ID||'?';
+    if(!porT[tid])porT[tid]={ini:0,ent:0,dev:0,fin:0,cob:0,pag:0};
+    porT[tid].ini+=+d.INV_INICIAL||0;porT[tid].ent+=+d.ENTREGADO||0;
+    porT[tid].dev+=+d.DEVOLUCION||0;porT[tid].fin+=+d.INV_FINAL||0;
+    porT[tid].cob+=+d.MONTO_COBRADO||0;
+    if(d.PAGADO==='Sí'||d.PAGADO==='Si'||d.PAGADO==='1')porT[tid].pag=1;
+  });
+  Object.entries(porT).sort((a,b)=>b[1].ent-a[1].ent).forEach(([tid,t])=>{
+    const info=dT[tid]||{nombre:tid,colonia:'',municipio:''};
+    const vend=t.ini+t.ent-t.dev-t.fin;
+    const dif=t.ent-vend-t.fin-t.dev;
+    const est=Math.abs(dif)===0?'OK':Math.abs(dif)<=3?`Dif ${dif}`:`Problema ${dif}`;
+    rowsT.push([info.nombre,info.colonia||info.municipio,horaMap[tid]||'',t.ent,t.fin,t.dev,+(vend*PX).toFixed(2),+t.cob.toFixed(2),t.pag?'Sí':'No',est]);
+  });
+  const wsT=XLSX.utils.aoa_to_sheet(rowsT);
+  wsT['!cols']=[{wch:25},{wch:20},{wch:8},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:8},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,wsT,'Por Tienda');
+
+  // HOJA 4: POR PRODUCTO
+  const rowsP=[['Producto','Entregado (paq)','Vendido (paq)','Faltante (paq)','Devuelto (paq)','Vendido $','Faltante $','Devuelto $']];
+  const porP={};
+  dD.forEach(d=>{
+    const pid=d.PRODUCTO_ID||'?';
+    if(!porP[pid])porP[pid]={ent:0,vend:0,fin:0,dev:0};
+    const ini=+d.INV_INICIAL||0,ent=+d.ENTREGADO||0,dev=+d.DEVOLUCION||0,fin=+d.INV_FINAL||0;
+    porP[pid].ent+=ent;porP[pid].vend+=(ini+ent-dev-fin);porP[pid].fin+=fin;porP[pid].dev+=dev;
+  });
+  Object.entries(porP).forEach(([pid,p])=>{
+    rowsP.push([PNOM[pid]||pid,p.ent,p.vend,p.fin,p.dev,+(p.vend*PX).toFixed(2),+(p.fin*PX).toFixed(2),+(p.dev*PX).toFixed(2)]);
+  });
+  const wsP=XLSX.utils.aoa_to_sheet(rowsP);
+  wsP['!cols']=[{wch:22},{wch:14},{wch:14},{wch:14},{wch:14},{wch:12},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,wsP,'Por Producto');
+
+  // HOJA 5: CARGA DEL DÍA
+  const rowsC=[['Producto','Carga Inicial','Merma','Disponible','Entregado','Regresó','Diferencia']];
+  const entProd={};
+  dD.forEach(d=>{const pid=d.PRODUCTO_ID;if(!pid)return;if(!entProd[pid])entProd[pid]=0;entProd[pid]+=+d.ENTREGADO||0});
+  const cargaProd={};
+  dC.forEach(c=>{
+    const pid=c.PRODUCTO_ID;if(!pid)return;
+    if(!cargaProd[pid])cargaProd[pid]={ini:0,merma:0,disp:0};
+    cargaProd[pid].ini+=+c.CARGA_INICIAL||0;
+    cargaProd[pid].merma+=+c.MERMA||0;
+    cargaProd[pid].disp+=+c.DISPONIBLE||0;
+  });
+  Object.entries(cargaProd).forEach(([pid,c])=>{
+    const ent=entProd[pid]||0;
+    const disp=c.disp||c.ini-c.merma;
+    const regreso=Math.max(0,disp-ent);
+    const dif=c.ini-c.merma-ent-regreso;
+    rowsC.push([PNOM[pid]||pid,c.ini,c.merma,disp,ent,regreso,dif]);
+  });
+  const wsC=XLSX.utils.aoa_to_sheet(rowsC);
+  wsC['!cols']=[{wch:22},{wch:14},{wch:10},{wch:12},{wch:12},{wch:10},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,wsC,'Carga del Día');
+
+  XLSX.writeFile(wb,`Control_Reparto_${fecha}.xlsx`);
+}
+
+function stab(id,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('act'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
+  btn.classList.add('act');g('panel-'+id).classList.add('act');
+}
+
+g('f-fecha').value=hoy();
+cargarDatos();
+</script>
+</body>
+</html>
